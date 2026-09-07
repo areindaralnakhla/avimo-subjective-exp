@@ -10,19 +10,48 @@
     /* keep videos responsive */
     .video-frame { aspect-ratio: 16 / 9; }
     canvas { outline: none; }
+    .rating-description { height: 3.75rem; overflow: hidden; }
+    .rating-grid > div > label { min-height: 3rem; display: block; }
+    input[type="range"] { width: calc(100% - 16px); margin-left: 8px; margin-right: 8px; }
+    input[type="range"] + div.grid-cols-5 {
+      position: relative;
+      height: 2.5rem;
+      margin: 4px 16px 0 !important;
+    }
+    input[type="range"] + div.grid-cols-5 span {
+      position: absolute;
+      top: 0;
+      width: 3rem;
+      transform: translateX(-50%);
+    }
+    input[type="range"] + div.grid-cols-5 span:nth-child(1) { left: 0%; }
+    input[type="range"] + div.grid-cols-5 span:nth-child(2) { left: 25%; }
+    input[type="range"] + div.grid-cols-5 span:nth-child(3) { left: 50%; }
+    input[type="range"] + div.grid-cols-5 span:nth-child(4) { left: 75%; }
+    input[type="range"] + div.grid-cols-5 span:nth-child(5) { left: 100%; }
   </style>
 </head>
 <body class="bg-gray-50 text-gray-900">
   <main class="max-w-4xl mx-auto p-4 sm:p-6 lg:p-8">
     <!-- Header -->
     <header class="mb-8">
-      <h1 class="text-2xl sm:text-3xl font-bold">Brief Subjective Evaluation of Final 3D Avatar</h1>
-      <p class="mt-2 text-gray-600">
-        You'll review a single reconstructed 3D avatar by our AViMO pipeline. First, you'll see the original dancer's motion video
-        for context; then you'll evaluate the reconstructed avatar in an interactive A-pose (static) viewer; and finally,
-        you'll evaluate the reconstructed motion video. Please rate realism and faithfulness on 1–5 scales.
-        Estimated time: ~2–4 minutes.
+      <h1 class="text-2xl sm:text-3xl font-bold">Subjective Evaluation (~3-5 minutes)</h1>
+      <p id="studyPurpose" class="mt-2 text-gray-600">
+        This study evaluates the quality of a 3D avatar reconstructed from a dance video.
       </p>
+      <p id="introInstructions" class="mt-2 text-gray-600">
+        First, you will view the original dancer's video;
+        then you will evaluate the reconstructed avatar in an interactive A-pose viewer; and finally, you'll evaluate the
+        reconstructed motion video. Please rate each item on the clearly labeled 5-point rating scale.<br />
+        Estimated participation time: ~3–5 minutes.
+      </p>
+      <label class="inline-flex items-center gap-2 mt-4" for="languageSelect">
+        <span>Language / Langue</span>
+        <select id="languageSelect" class="rounded-lg border-gray-300">
+          <option value="en">English</option>
+          <option value="fr">Français</option>
+        </select>
+      </label>
     </header>
 
     <!-- Consent -->
@@ -33,13 +62,14 @@
       </p>
       <label class="inline-flex items-start gap-3">
         <input id="consent" type="checkbox" class="mt-1 w-5 h-5 border-gray-300 rounded" />
-        <span>I agree to participate in this study.</span>
+        <span id="consentText">I agree to participate in this study.</span>
       </label>
     </section>
 
     <!-- Participant Background -->
     <section class="mb-8 bg-white rounded-2xl shadow p-6">
       <h2 class="text-xl font-semibold mb-4">Participant Background</h2>
+
 
       <div class="grid sm:grid-cols-2 gap-5">
         <!-- Field of Work / Study -->
@@ -88,8 +118,8 @@
 
         <!-- Experience -->
         <div>
-          <label class="block font-medium mb-2">Experience with 3D models / avatars (optional)</label>
-          <select id="experience" class="w-full rounded-lg border-gray-300">
+          <label class="block font-medium mb-2">Experience with 3D graphics / avatars <span class="text-red-500">*</span></label>
+          <select id="experience" class="w-full rounded-lg border-gray-300" required>
             <option value="">Select…</option>
             <option>None</option>
             <option>Beginner (e.g., casual viewing / minimal editing)</option>
@@ -97,13 +127,42 @@
             <option>Advanced (e.g., professional work / research)</option>
           </select>
         </div>
+
+        <div>
+          <label class="block font-medium mb-2" for="ageRange">Age range <span class="text-red-500">*</span></label>
+          <select id="ageRange" class="w-full rounded-lg border-gray-300" required>
+            <option value="">Select…</option>
+            <option>18–24</option>
+            <option>25–34</option>
+            <option>35–44</option>
+            <option>45–54</option>
+            <option>55–64</option>
+            <option>65 or older</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-medium mb-2" for="gender">Gender (optional)</label>
+          <select id="gender" class="w-full rounded-lg border-gray-300">
+            <option value="">Prefer not to say</option>
+            <option>Woman</option>
+            <option>Man</option>
+            <option>Self-describe</option>
+          </select>
+          <input id="genderOther" type="text" class="mt-2 w-full rounded-lg border-gray-300 hidden" placeholder="Please specify…" />
+        </div>
+
+        <div>
+          <label class="block font-medium mb-2" for="countryRegion">Country of origin (optional)</label>
+          <input id="countryRegion" type="text" class="w-full rounded-lg border-gray-300" placeholder="Country of origin" />
+        </div>
       </div>
     </section>
 
     <!-- Section: Monocular Input (Video) -->
     <section class="mb-8 bg-white rounded-2xl shadow p-6">
       <h2 class="text-xl font-semibold mb-4">Monocular Video Input</h2>
-      <div class="mb-3 text-gray-600">
+      <div id="inputInstructions" class="mb-3 text-gray-600">
         This is the original monocular video input used to reconstruct the 3D avatar. Please watch to understand the source material.
       </div>
       <div class="rounded-xl overflow-hidden bg-black mb-5">
@@ -113,16 +172,18 @@
 
     <!-- Section: A-pose (Interactive PLY) -->
     <section class="mb-8 bg-white rounded-2xl shadow p-6">
-      <h2 class="text-xl font-semibold mb-4">A-pose (Static) — Interactive 3D</h2>
-      <div class="mb-3 text-gray-600">
-        Now that you've seen the original dancer, evaluate the reconstructed avatar in A-pose. 
+      <h2 class="text-xl font-semibold mb-4">A-pose (Static) - Interactive 3D</h2>
+      <div id="aposeInstructions" class="mb-3 text-gray-600">
+        Now that you've seen the original dancer, evaluate the reconstructed avatar in A-pose.
         Rotate / zoom the avatar below (mouse: drag = orbit, wheel = zoom, right-drag = pan).
       </div>
+      <p class="mb-5 text-sm text-gray-600">For every rating below, select one integer from 1 (lowest quality/fit) to 5 (highest quality/fit). Use 3 when the quality is neither poor nor excellent.</p>
       <div id="viewer" class="w-full h-[420px] bg-gray-100 rounded-xl mb-5"></div>
 
-      <div class="grid sm:grid-cols-2 gap-5">
-        <div>
+      <div class="rating-grid grid sm:grid-cols-2 gap-5">
+        <div class="order-1">
           <label class="block font-medium mb-2">Face quality and details <span class="text-red-500">*</span></label>
+          <p class="rating-description text-sm text-gray-600 mb-2">How clear and realistic do the face shape and facial details look?</p>
           <input id="faceQuality" type="range" min="1" max="5" step="1" class="w-full" />
           <div class="grid grid-cols-5 text-xs text-gray-500 mt-1">
             <span class="text-center">1<br>Poor</span>
@@ -133,8 +194,9 @@
           </div>
         </div>
 
-        <div>
+        <div class="order-2">
           <label class="block font-medium mb-2">Hand quality and details <span class="text-red-500">*</span></label>
+          <p class="rating-description text-sm text-gray-600 mb-2">How clear and realistic do the hands and fingers look?</p>
           <input id="handQuality" type="range" min="1" max="5" step="1" class="w-full" />
           <div class="grid grid-cols-5 text-xs text-gray-500 mt-1">
             <span class="text-center">1<br>Poor</span>
@@ -145,8 +207,9 @@
           </div>
         </div>
 
-        <div>
+        <div class="order-5">
           <label class="block font-medium mb-2">Color fidelity and accuracy <span class="text-red-500">*</span></label>
+          <p class="rating-description text-sm text-gray-600 mb-2">How closely do the avatar’s colors match the original dancer?</p>
           <input id="colorFidelity" type="range" min="1" max="5" step="1" class="w-full" />
           <div class="grid grid-cols-5 text-xs text-gray-500 mt-1">
             <span class="text-center">1<br>Inaccurate</span>
@@ -157,8 +220,9 @@
           </div>
         </div>
 
-        <div>
+        <div class="order-3">
           <label class="block font-medium mb-2">Overall body proportions <span class="text-red-500">*</span></label>
+          <p class="rating-description text-sm text-gray-600 mb-2">Do the size and proportions of the body look realistic?</p>
           <input id="bodyProportions" type="range" min="1" max="5" step="1" class="w-full" />
           <div class="grid grid-cols-5 text-xs text-gray-500 mt-1">
             <span class="text-center">1<br>Unrealistic</span>
@@ -169,8 +233,9 @@
           </div>
         </div>
 
-        <div>
+        <div class="order-6">
           <label class="block font-medium mb-2">Clothing/texture details <span class="text-red-500">*</span></label>
+          <p class="rating-description text-sm text-gray-600 mb-2">How clearly can you see clothing patterns, edges, and other visible details?</p>
           <input id="clothingDetails" type="range" min="1" max="5" step="1" class="w-full" />
           <div class="grid grid-cols-5 text-xs text-gray-500 mt-1">
             <span class="text-center">1<br>Poor</span>
@@ -181,8 +246,22 @@
           </div>
         </div>
 
-        <div>
+        <div class="order-7">
+          <label class="block font-medium mb-2">Surface/material realism <span class="text-red-500">*</span></label>
+          <p class="rating-description text-sm text-gray-600 mb-2">How realistic do the skin, hair, and clothing surfaces look?</p>
+          <input id="materialRealism" type="range" min="1" max="5" step="1" class="w-full" />
+          <div class="grid grid-cols-5 text-xs text-gray-500 mt-1">
+            <span class="text-center">1<br>Unrealistic</span>
+            <span class="text-center">2</span>
+            <span class="text-center">3</span>
+            <span class="text-center">4</span>
+            <span class="text-center">5<br>Very realistic</span>
+          </div>
+        </div>
+
+        <div class="order-4">
           <label class="block font-medium mb-2">Identity consistency with original <span class="text-red-500">*</span></label>
+          <p class="rating-description text-sm text-gray-600 mb-2">How much does the avatar look like the person in the original video?</p>
           <input id="identityConsistency" type="range" min="1" max="5" step="1" class="w-full" />
           <div class="grid grid-cols-5 text-xs text-gray-500 mt-1">
             <span class="text-center">1<br>Not consistent</span>
@@ -194,24 +273,27 @@
         </div>
       </div>
 
-      <label class="block font-medium mt-4 mb-2">Comments on A-pose reconstruction (optional)</label>
-      <textarea id="commentsStatic" rows="3" class="w-full rounded-lg border-gray-300" placeholder="Please describe any specific issues or notable quality aspects you observed..."></textarea>
+      <label class="block font-medium mt-4 mb-2">Please describe any specific issues or notable quality aspects you observed</label>
+      <textarea id="commentsStatic" rows="3" class="w-full rounded-lg border-gray-300" placeholder="comments"></textarea>
     </section>
 
     <!-- Section: Original Motion (Video) -->
     <section class="mb-8 bg-white rounded-2xl shadow p-6">
       <h2 class="text-xl font-semibold mb-4">Reconstructed Motion - 2D Video</h2>
-      <div class="mb-3 text-gray-600">
+      <div id="motionInstructions" class="mb-3 text-gray-600">
         This shows the reconstructed avatar animated with the original motion from the monocular input. 
         Please evaluate the motion quality and naturalness.
       </div>
+      <p class="mb-5 text-sm text-gray-600">Use the same 1–5 scale for each item: 1 is the negative endpoint, 5 is the positive endpoint, and 3 is neutral or intermediate.</p>
       <div class="rounded-xl overflow-hidden bg-black mb-5">
         <video id="videoOriginal" class="w-full video-frame" controls playsinline src="original-motion.mp4"></video>
       </div>
 
-      <div class="grid sm:grid-cols-3 gap-5">
+
+      <div class="rating-grid grid sm:grid-cols-3 gap-5">
         <div>
           <label class="block font-medium mb-2">Movement naturalness <span class="text-red-500">*</span></label>
+          <p class="rating-description text-sm text-gray-600 mb-2">How natural and lifelike does the avatar’s movement appear?</p>
           <input id="naturalnessOwn" type="range" min="1" max="5" step="1" class="w-full" />
           <div class="grid grid-cols-5 text-xs text-gray-500 mt-1">
             <span class="text-center">1<br>Unnatural</span>
@@ -223,6 +305,7 @@
         </div>
         <div>
           <label class="block font-medium mb-2">Preservation of original motion <span class="text-red-500">*</span></label>
+          <p class="rating-description text-sm text-gray-600 mb-2">How accurately does the avatar reproduce the dancer’s movements?</p>
           <input id="preservationOwn" type="range" min="1" max="5" step="1" class="w-full" />
           <div class="grid grid-cols-5 text-xs text-gray-500 mt-1">
             <span class="text-center">1<br>Poor</span>
@@ -234,6 +317,7 @@
         </div>
         <div>
           <label class="block font-medium mb-2">Animation smoothness <span class="text-red-500">*</span></label>
+          <p class="rating-description text-sm text-gray-600 mb-2">How smooth is the movement, without visible jerks or sudden changes?</p>
           <input id="smoothnessOwn" type="range" min="1" max="5" step="1" class="w-full" />
           <div class="grid grid-cols-5 text-xs text-gray-500 mt-1">
             <span class="text-center">1<br>Jerky</span>
@@ -245,14 +329,14 @@
         </div>
       </div>
 
-      <label class="block font-medium mt-4 mb-2">Comments on original motion (optional)</label>
-      <textarea id="commentsOwn" rows="3" class="w-full rounded-lg border-gray-300" placeholder="Please describe any specific issues or notable quality aspects you observed..."></textarea>
+      <label class="block font-medium mt-4 mb-2">Please describe any specific issues or notable quality aspects you observed</label>
+      <textarea id="commentsOwn" rows="3" class="w-full rounded-lg border-gray-300" placeholder="comments"></textarea>
     </section>
 
     <!-- Submit -->
     <section class="mb-16 bg-white rounded-2xl shadow p-6">
       <h2 class="text-xl font-semibold mb-4">Submit</h2>
-      <p class="text-gray-600 mb-4">Please confirm all required sliders (1–5) are set.</p>
+      <p class="text-gray-600 mb-4">Thank you for your participation.</p>
       <button id="submitBtn"
               class="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-gray-900 text-white hover:bg-gray-800 active:bg-gray-700">
         Submit response
@@ -335,6 +419,10 @@
     // ---------- Form logic ----------
     const consentEl = document.getElementById('consent');
 
+    const ageRangeEl = document.getElementById('ageRange');
+    const genderEl = document.getElementById('gender');
+    const genderOtherEl = document.getElementById('genderOther');
+    const countryRegionEl = document.getElementById('countryRegion');
     const fieldEl = document.getElementById('field');
     const fieldOtherEl = document.getElementById('fieldOther');
     const educationEl = document.getElementById('education');
@@ -347,6 +435,7 @@
     fieldEl.addEventListener('change', () => fieldOtherEl.classList.toggle('hidden', fieldEl.value !== 'Other'));
     educationEl.addEventListener('change', () => educationOtherEl.classList.toggle('hidden', educationEl.value !== 'Other'));
     roleEl.addEventListener('change', () => roleOtherEl.classList.toggle('hidden', roleEl.value !== 'Other'));
+    genderEl.addEventListener('change', () => genderOtherEl.classList.toggle('hidden', genderEl.value !== 'Self-describe'));
 
     // Sliders & comments
     const faceQualityEl = document.getElementById('faceQuality');
@@ -354,6 +443,7 @@
     const colorFidelityEl = document.getElementById('colorFidelity');
     const bodyProportionsEl = document.getElementById('bodyProportions');
     const clothingDetailsEl = document.getElementById('clothingDetails');
+    const materialRealismEl = document.getElementById('materialRealism');
     const identityConsistencyEl = document.getElementById('identityConsistency');
     const commentsStaticEl = document.getElementById('commentsStatic');
 
@@ -361,29 +451,210 @@
     const preservationOwnEl = document.getElementById('preservationOwn');
     const smoothnessOwnEl = document.getElementById('smoothnessOwn');
     const commentsOwnEl = document.getElementById('commentsOwn');
+    const ratingElements = [
+      faceQualityEl, handQualityEl, colorFidelityEl, bodyProportionsEl,
+      clothingDetailsEl, materialRealismEl, identityConsistencyEl, naturalnessOwnEl,
+      preservationOwnEl, smoothnessOwnEl,
+    ];
+
+    ratingElements.forEach((ratingElement) => {
+      ratingElement.dataset.answered = 'false';
+      ratingElement.addEventListener('input', () => {
+        ratingElement.dataset.answered = 'true';
+      });
+    });
 
     const submitBtn = document.getElementById('submitBtn');
     const submitStatus = document.getElementById('submitStatus');
+    const languageSelectEl = document.getElementById('languageSelect');
+    const videoOriginalEl = document.getElementById('videoOriginal');
+    videoOriginalEl.defaultPlaybackRate = 2;
+    videoOriginalEl.playbackRate = 2;
+    videoOriginalEl.addEventListener('loadedmetadata', () => {
+      videoOriginalEl.playbackRate = 2;
+    });
+
+    const frenchTranslations = {
+      'Subjective Evaluation (~3–5 minutes)': 'Évaluation subjective (~3–5 minutes)',
+      'This study evaluates the quality of a 3D avatar reconstructed from a dance video.': 'Cette étude évalue la qualité d’un avatar 3D reconstruit à partir d’une vidéo de danse.',
+      "First, you will view the original dancer's video;": 'Vous regarderez d’abord la vidéo originale de la danseuse ou du danseur;',
+      "then you will evaluate the reconstructed avatar in an interactive A-pose viewer; and finally, you'll evaluate the": 'vous évaluerez ensuite l’avatar reconstruit dans une vue interactive A-pose ; enfin, vous évaluerez la',
+      'reconstructed motion video. Please rate each item on the clearly labeled 5-point rating scale.': 'vidéo du mouvement reconstruit. Évaluez chaque élément à l’aide de l’échelle clairement indiquée en 5 points.',
+      'Estimated participation time: ~3–5 minutes.': 'Durée estimée : environ 3 à 5 minutes.',
+      'Language / Langue': 'Langue',
+      'Consent': 'Consentement',
+      'Your participation is voluntary and anonymous. Responses will be used for research purposes only.': 'Votre participation est volontaire et anonyme. Les réponses seront utilisées uniquement à des fins de recherche.',
+      'I agree to participate in this study.': 'J’accepte de participer à cette étude.',
+      'Participant Background': 'Informations sur le participant',
+      'Field of work / study': 'Domaine professionnel ou d’études',
+      'Highest level of education': 'Niveau d’études le plus élevé',
+      'Current role': 'Rôle actuel',
+      'Experience with 3D graphics / avatars': 'Expérience avec les graphismes 3D ou les avatars',
+      'Age range': 'Tranche d’âge',
+      'Gender (optional)': 'Genre (facultatif)',
+      'Country of origin (optional)': 'Pays d’origine (facultatif)',
+      'Monocular Video Input': 'Vidéo monoculaire d’origine',
+      'This is the original monocular video input used to reconstruct the 3D avatar. Please watch to understand the source material.': 'Voici la vidéo monoculaire originale utilisée pour reconstruire l’avatar 3D. Regardez-la pour comprendre le contenu source.',
+      'A-pose (Static) - Interactive 3D': 'A-pose (statique) - 3D interactive',
+      'For every rating below, select one integer from 1 (lowest quality/fit) to 5 (highest quality/fit). Use 3 when the quality is neither poor nor excellent.': 'Pour chaque évaluation ci-dessous, choisissez un entier de 1 (qualité ou adéquation minimale) à 5 (qualité ou adéquation maximale). Utilisez 3 lorsque la qualité est intermédiaire.',
+      'Now that you\'ve seen the original dancer, evaluate the reconstructed avatar in A-pose.': 'Après avoir regardé la danseuse ou le danseur original, évaluez l’avatar reconstruit en A-pose.',
+      'Rotate / zoom the avatar below (mouse: drag = orbit, wheel = zoom, right-drag = pan).': 'Faites pivoter ou zoomez l’avatar ci-dessous (souris : glisser = orbiter, molette = zoomer, clic droit et glisser = déplacer).',
+      'Face quality and details': 'Qualité et détails du visage',
+      'Hand quality and details': 'Qualité et détails des mains',
+      'Color fidelity and accuracy': 'Fidélité et précision des couleurs',
+      'Overall body proportions': 'Proportions générales du corps',
+      'Clothing/texture details': 'Détails des vêtements et des textures',
+      'Surface/material realism': 'Réalisme des surfaces et des matériaux',
+      'Identity consistency with original': 'Cohérence de l’identité avec l’original',
+      'Poor': 'Faible',
+      'Excellent': 'Excellent',
+      'Inaccurate': 'Inexact',
+      'Very accurate': 'Très précis',
+      'Unrealistic': 'Irréaliste',
+      'Very realistic': 'Très réaliste',
+      'Not consistent': 'Pas cohérent',
+      'Very consistent': 'Très cohérent',
+      'How clear and realistic do the face shape and facial details look?': 'La forme du visage et ses détails sont-ils nets et réalistes ?',
+      'How clear and realistic do the hands and fingers look?': 'Les mains et les doigts sont-ils nets et réalistes ?',
+      'How closely do the avatar’s colors match the original dancer?': 'Dans quelle mesure les couleurs de l’avatar correspondent-elles à celles de la danseuse ou du danseur original ?',
+      'Do the size and proportions of the body look realistic?': 'La taille et les proportions du corps semblent-elles réalistes ?',
+      'How clearly can you see clothing patterns, edges, and other visible details?': 'Les motifs, les contours des vêtements et les autres détails visibles sont-ils nets ?',
+      'How realistic do the skin, hair, and clothing surfaces look?': 'La peau, les cheveux et les vêtements ont-ils un aspect réaliste ?',
+      'How much does the avatar look like the person in the original video?': 'Dans quelle mesure l’avatar ressemble-t-il à la personne de la vidéo originale ?',
+      'Reconstructed Motion - 2D Video': 'Mouvement reconstruit - vidéo 2D',
+      'This shows the reconstructed avatar animated with the original motion from the monocular input.': 'Cette vidéo montre l’avatar reconstruit animé avec le mouvement original de la vidéo monoculaire.',
+      'Please evaluate the motion quality and naturalness.': 'Évaluez la qualité et le naturel du mouvement.',
+      'Use the same 1–5 scale for each item: 1 is the negative endpoint, 5 is the positive endpoint, and 3 is neutral or intermediate.': 'Utilisez la même échelle de 1 à 5 pour chaque élément : 1 est l’extrémité négative, 5 l’extrémité positive et 3 est neutre ou intermédiaire.',
+      'Movement naturalness': 'Naturel du mouvement',
+      'Preservation of original motion': 'Préservation du mouvement original',
+      'Animation smoothness': 'Fluidité de l’animation',
+      'How natural and lifelike does the avatar’s movement appear?': 'Le mouvement de l’avatar paraît-il naturel et vivant ?',
+      'How accurately does the avatar reproduce the dancer’s movements?': 'L’avatar reproduit-il fidèlement les mouvements de la danseuse ou du danseur ?',
+      'How smooth is the movement, without visible jerks or sudden changes?': 'Le mouvement est-il fluide, sans à-coups ni changements brusques ?',
+      'Unnatural': 'Peu naturel',
+      'Very natural': 'Très naturel',
+      'Jerky': 'Saccadé',
+      'Smooth': 'Fluide',
+      'Please describe any specific issues or notable quality aspects you observed': 'Décrivez les problèmes spécifiques ou les aspects de qualité remarquables que vous avez observés',
+      'Submit': 'Envoyer',
+      'Thank you for your participation.': 'Merci pour votre participation.',
+      'Submit response': 'Envoyer la réponse',
+      'Select…': 'Sélectionner…',
+      'Woman': 'Femme',
+      'Man': 'Homme',
+      'Self-describe': 'Autre réponse',
+      'Prefer not to say': 'Préfère ne pas répondre',
+      'None': 'Aucune',
+      'Beginner (e.g., casual viewing / minimal editing)': 'Débutant(e) (par ex. visionnage occasionnel ou édition minimale)',
+      'Intermediate (e.g., coursework / basic 3D design)': 'Intermédiaire (par ex. cours ou conception 3D de base)',
+      'Advanced (e.g., professional work / research)': 'Avancé(e) (par ex. travail professionnel ou recherche)',
+      'High School': 'Lycée',
+      "Bachelor's Degree": 'Licence',
+      "Master's Degree": 'Master',
+      'Doctorate (PhD)': 'Doctorat',
+      'Student (Undergraduate)': 'Étudiant(e) (licence)',
+      "Student (Master's / Doctorate)": 'Étudiant(e) (master ou doctorat)',
+      'Academic / Researcher': 'Universitaire ou chercheur(euse)',
+      'Industry Professional (Technical)': 'Professionnel(le) du secteur (technique)',
+      'Industry Professional (Non-technical)': 'Professionnel(le) du secteur (non technique)',
+      'Arts / Design': 'Arts ou design',
+      'Humanities / Social Sciences': 'Sciences humaines ou sociales',
+      'Other': 'Autre',
+      'Computer Graphics / Animation': 'Infographie ou animation',
+      'Computer Vision / AI': 'Vision par ordinateur ou IA',
+      'Engineering': 'Ingénierie',
+      '65 or older': '65 ans ou plus',
+    };
+
+    const translatableElements = Array.from(document.querySelectorAll('h1, h2, p, label:not([for="languageSelect"]), option, button'))
+      .filter((element) => !element.querySelector('#consent'));
+    translatableElements.forEach((element) => {
+      if (!element.classList.contains('text-red-500')) {
+        element.dataset.englishText = element.textContent.trim();
+      }
+    });
+    document.querySelectorAll('option').forEach((option) => {
+      option.dataset.englishValue = option.value;
+    });
+
+    function setLanguage(language) {
+      document.documentElement.lang = language;
+      translatableElements.forEach((element) => {
+        if (element.classList.contains('text-red-500')) return;
+        const englishText = element.dataset.englishText;
+        const translationKey = englishText.replace(/\s*\*$/, '');
+        const translatedText = language === 'fr' ? (frenchTranslations[translationKey] || translationKey) : translationKey;
+        if (element.tagName === 'LABEL' && element.querySelector('.text-red-500')) {
+          const requiredMarker = element.querySelector('.text-red-500').outerHTML;
+          element.innerHTML = `${translatedText} ${requiredMarker}`;
+        } else {
+          element.textContent = translatedText;
+        }
+      });
+      document.querySelectorAll('option').forEach((option) => {
+        const englishText = option.dataset.englishText || option.textContent.trim();
+        option.textContent = language === 'fr' ? (frenchTranslations[englishText] || englishText) : englishText;
+        option.value = option.dataset.englishValue;
+      });
+      document.querySelectorAll('textarea').forEach((textarea) => {
+        textarea.placeholder = language === 'fr' ? 'Commentaires' : 'comments';
+      });
+      document.getElementById('consentText').textContent = language === 'fr'
+        ? 'J’accepte de participer à cette étude.'
+        : 'I agree to participate in this study.';
+      document.getElementById('countryRegion').placeholder = language === 'fr' ? 'Pays d’origine' : 'Country of origin';
+      document.querySelectorAll('input[placeholder="Please specify…"]').forEach((input) => {
+        input.placeholder = language === 'fr' ? 'Veuillez préciser…' : 'Please specify…';
+      });
+      document.getElementById('introInstructions').innerHTML = language === 'fr'
+        ? "Vous regarderez d’abord la vidéo originale de la danseuse ou du danseur ;<br />vous évaluerez ensuite l’avatar reconstruit dans une vue interactive A-pose ; enfin, vous évaluerez la vidéo du mouvement reconstruit. Évaluez chaque élément à l’aide de l’échelle clairement indiquée en 5 points.<br />Durée estimée : environ 3 à 5 minutes."
+        : "First, you will view the original dancer's video;<br />then you will evaluate the reconstructed avatar in an interactive A-pose viewer; and finally, you'll evaluate the reconstructed motion video. Please rate each item on the clearly labeled 5-point rating scale.<br />Estimated participation time: ~3–5 minutes.";
+      document.getElementById('studyPurpose').textContent = language === 'fr'
+        ? 'Cette étude évalue la qualité d’un avatar 3D reconstruit à partir d’une vidéo de danse.'
+        : 'This study evaluates the quality of a 3D avatar reconstructed from a dance video.';
+      document.getElementById('inputInstructions').textContent = language === 'fr'
+        ? 'Voici la vidéo monoculaire originale utilisée pour reconstruire l’avatar 3D. Regardez-la pour comprendre le contenu source.'
+        : 'This is the original monocular video input used to reconstruct the 3D avatar. Please watch to understand the source material.';
+      document.getElementById('aposeInstructions').innerHTML = language === 'fr'
+        ? 'Après avoir regardé la danseuse ou le danseur original, évaluez l’avatar reconstruit en A-pose.<br />Faites pivoter ou zoomez l’avatar ci-dessous (souris : glisser = orbiter, molette = zoomer, clic droit et glisser = déplacer).'
+        : "Now that you've seen the original dancer, evaluate the reconstructed avatar in A-pose.<br />Rotate / zoom the avatar below (mouse: drag = orbit, wheel = zoom, right-drag = pan).";
+      document.getElementById('motionInstructions').innerHTML = language === 'fr'
+        ? 'Cette vidéo montre l’avatar reconstruit animé avec le mouvement original de la vidéo monoculaire.<br />Évaluez la qualité et le naturel du mouvement.'
+        : 'This shows the reconstructed avatar animated with the original motion from the monocular input.<br />Please evaluate the motion quality and naturalness.';
+    }
+
+    languageSelectEl.addEventListener('change', () => setLanguage(languageSelectEl.value));
 
     function validate() {
       const missing = [];
       if (!consentEl.checked) missing.push('consent');
+      if (!ageRangeEl.value) missing.push('ageRange');
       if (!fieldEl.value) missing.push('field');
       if (!educationEl.value) missing.push('education');
       if (!roleEl.value) missing.push('role');
+      if (!experienceEl.value) missing.push('experience');
 
-      if (!faceQualityEl.value) missing.push('faceQuality');
-      if (!handQualityEl.value) missing.push('handQuality');
-      if (!colorFidelityEl.value) missing.push('colorFidelity');
-      if (!bodyProportionsEl.value) missing.push('bodyProportions');
-      if (!clothingDetailsEl.value) missing.push('clothingDetails');
-      if (!identityConsistencyEl.value) missing.push('identityConsistency');
-
-      if (!naturalnessOwnEl.value) missing.push('naturalnessOwn');
-      if (!preservationOwnEl.value) missing.push('preservationOwn');
-      if (!smoothnessOwnEl.value) missing.push('smoothnessOwn');
+      ratingElements.forEach((ratingElement) => {
+        if (ratingElement.dataset.answered !== 'true') missing.push(ratingElement.id);
+      });
 
       return missing;
+    }
+
+    function downloadResponseCsv(payload, filename) {
+      const headers = Object.keys(payload);
+      const values = headers.map((header) => payload[header]);
+      const escapeCsv = (value) => {
+        const text = value === null || value === undefined ? '' : String(value);
+        return `"${text.replace(/"/g, '""')}"`;
+      };
+      const csv = `${headers.map(escapeCsv).join(',')}\n${values.map(escapeCsv).join(',')}\n`;
+      const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      link.click();
+      return url;
     }
 
     submitBtn.addEventListener('click', async () => {
@@ -398,7 +669,12 @@
 
       const payload = {
         timestamp: new Date().toISOString(),
+        language: languageSelectEl.value,
         consent: consentEl.checked ? 'Yes' : 'No',
+        ageRange: ageRangeEl.value,
+        gender: genderEl.value,
+        genderOther: genderEl.value === 'Self-describe' ? genderOtherEl.value.trim() : '',
+        countryRegion: countryRegionEl.value.trim(),
         field: fieldEl.value,
         fieldOther: fieldOtherEl.classList.contains('hidden') ? '' : fieldOtherEl.value,
         education: educationEl.value,
@@ -412,6 +688,7 @@
         colorFidelity: Number(colorFidelityEl.value),
         bodyProportions: Number(bodyProportionsEl.value),
         clothingDetails: Number(clothingDetailsEl.value),
+        materialRealism: Number(materialRealismEl.value),
         identityConsistency: Number(identityConsistencyEl.value),
         commentsStatic: commentsStaticEl.value.trim(),
 
@@ -419,6 +696,7 @@
         preservationOwn: Number(preservationOwnEl.value),
         smoothnessOwn: Number(smoothnessOwnEl.value),
         commentsOwn: commentsOwnEl.value.trim(),
+        ratingScale: '5-point ordinal scale; 1 = negative endpoint, 3 = neutral/intermediate, 5 = positive endpoint',
       };
 
       // POST to Apps Script or test mode
@@ -437,14 +715,11 @@
           submitStatus.className = 'ml-3 text-sm text-blue-600';
           submitBtn.disabled = true;
           
-          // Create a downloadable file with the data
-          const dataStr = JSON.stringify(payload, null, 2);
-          const dataBlob = new Blob([dataStr], {type: 'application/json'});
-          const url = URL.createObjectURL(dataBlob);
+          const url = downloadResponseCsv(payload, `avimo-response-${Date.now()}.csv`);
           const link = document.createElement('a');
           link.href = url;
-          link.download = `avimo-response-${Date.now()}.json`;
-          link.textContent = 'Download your response';
+          link.download = `avimo-response-${Date.now()}.csv`;
+          link.textContent = 'Download your response CSV';
           link.className = 'ml-3 text-blue-600 underline';
           submitStatus.appendChild(link);
           
@@ -481,14 +756,7 @@
         console.log('=== FALLBACK FORM SUBMISSION ===');
         console.log(JSON.stringify(payload, null, 2));
         
-        // Create downloadable file as backup
-        const dataStr = JSON.stringify(payload, null, 2);
-        const dataBlob = new Blob([dataStr], {type: 'application/json'});
-        const url = URL.createObjectURL(dataBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `avimo-response-${Date.now()}.json`;
-        link.click(); // Auto-download the file
+        const url = downloadResponseCsv(payload, `avimo-response-${Date.now()}.csv`);
         
         submitStatus.textContent = 'Response saved locally. Google Sheets integration failed.';
         submitStatus.className = 'ml-3 text-sm text-orange-600';
@@ -497,8 +765,8 @@
         // Add download link for manual access
         const manualLink = document.createElement('a');
         manualLink.href = url;
-        manualLink.download = `avimo-response-${Date.now()}.json`;
-        manualLink.textContent = ' Download backup';
+        manualLink.download = `avimo-response-${Date.now()}.csv`;
+        manualLink.textContent = ' Download CSV backup';
         manualLink.className = 'ml-2 text-blue-600 underline';
         submitStatus.appendChild(manualLink);
       }
