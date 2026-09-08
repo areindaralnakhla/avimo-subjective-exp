@@ -495,7 +495,7 @@
       'Experience with 3D graphics / avatars': 'Expérience avec les graphismes 3D ou les avatars',
       'Age range': 'Tranche d’âge',
       'Gender': 'Genre',
-      'Country of origin (optional)': 'Pays d’origine (facultatif)',
+      'Country of origin': 'Pays d’origine',
       'Monocular Video Input': 'Vidéo monoculaire d’origine',
       'This is the original monocular video input used to reconstruct the 3D avatar. Please watch to understand the source material.': 'Voici la vidéo monoculaire originale utilisée pour reconstruire l’avatar 3D. Regardez-la pour comprendre le contenu source.',
       'A-pose (Static) - Interactive 3D': 'A-pose (statique) - 3D interactive',
@@ -580,6 +580,12 @@
     document.querySelectorAll('option').forEach((option) => {
       option.dataset.englishValue = option.value;
     });
+    const ratingScaleLabels = document.querySelectorAll('div.grid-cols-5 span');
+    ratingScaleLabels.forEach((label) => {
+      const parts = label.innerHTML.split('<br>');
+      label.dataset.scaleValue = parts[0];
+      label.dataset.scaleText = parts[1] || '';
+    });
 
     function setLanguage(language) {
       document.documentElement.lang = language;
@@ -599,6 +605,15 @@
         const englishText = option.dataset.englishText || option.textContent.trim();
         option.textContent = language === 'fr' ? (frenchTranslations[englishText] || englishText) : englishText;
         option.value = option.dataset.englishValue;
+      });
+      ratingScaleLabels.forEach((label) => {
+        const scaleText = label.dataset.scaleText;
+        const translatedScaleText = language === 'fr'
+          ? (frenchTranslations[scaleText] || scaleText)
+          : scaleText;
+        label.innerHTML = translatedScaleText
+          ? `${label.dataset.scaleValue}<br>${translatedScaleText}`
+          : label.dataset.scaleValue;
       });
       document.querySelectorAll('textarea').forEach((textarea) => {
         textarea.placeholder = language === 'fr' ? 'Commentaires' : 'comments';
