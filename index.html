@@ -69,7 +69,7 @@
     <!-- Participant Background -->
     <section class="mb-8 bg-white rounded-2xl shadow p-6">
       <h2 class="text-xl font-semibold mb-4">Participant Background</h2>
-
+      <p id="backgroundDescription" class="text-sm text-gray-600 mb-4">These questions help describe the participant sample. Please answer the required background questions before continuing.</p>
 
       <div class="grid sm:grid-cols-2 gap-5">
         <!-- Field of Work / Study -->
@@ -142,9 +142,9 @@
         </div>
 
         <div>
-          <label class="block font-medium mb-2" for="gender">Gender (optional)</label>
-          <select id="gender" class="w-full rounded-lg border-gray-300">
-            <option value="">Prefer not to say</option>
+          <label class="block font-medium mb-2" for="gender">Gender <span class="text-red-500">*</span></label>
+          <select id="gender" class="w-full rounded-lg border-gray-300" required>
+            <option value="Prefer not to say">Prefer not to say</option>
             <option>Woman</option>
             <option>Man</option>
             <option>Self-describe</option>
@@ -153,8 +153,8 @@
         </div>
 
         <div>
-          <label class="block font-medium mb-2" for="countryRegion">Country of origin (optional)</label>
-          <input id="countryRegion" type="text" class="w-full rounded-lg border-gray-300" placeholder="Country of origin" />
+          <label class="block font-medium mb-2" for="countryRegion">Country of origin <span class="text-red-500">*</span></label>
+          <input id="countryRegion" type="text" class="w-full rounded-lg border-gray-300" placeholder="Country of origin" required />
         </div>
       </div>
     </section>
@@ -432,10 +432,20 @@
     const experienceEl = document.getElementById('experience');
 
     // Show "Other" text boxes dynamically
-    fieldEl.addEventListener('change', () => fieldOtherEl.classList.toggle('hidden', fieldEl.value !== 'Other'));
+    fieldEl.addEventListener('change', () => {
+      const isOtherField = fieldEl.value === 'Other';
+      fieldOtherEl.classList.toggle('hidden', !isOtherField);
+      fieldOtherEl.required = isOtherField;
+      if (!isOtherField) fieldOtherEl.value = '';
+    });
     educationEl.addEventListener('change', () => educationOtherEl.classList.toggle('hidden', educationEl.value !== 'Other'));
     roleEl.addEventListener('change', () => roleOtherEl.classList.toggle('hidden', roleEl.value !== 'Other'));
-    genderEl.addEventListener('change', () => genderOtherEl.classList.toggle('hidden', genderEl.value !== 'Self-describe'));
+    genderEl.addEventListener('change', () => {
+      const isSelfDescribed = genderEl.value === 'Self-describe';
+      genderOtherEl.classList.toggle('hidden', !isSelfDescribed);
+      genderOtherEl.required = isSelfDescribed;
+      if (!isSelfDescribed) genderOtherEl.value = '';
+    });
 
     // Sliders & comments
     const faceQualityEl = document.getElementById('faceQuality');
@@ -484,7 +494,7 @@
       'Current role': 'Rôle actuel',
       'Experience with 3D graphics / avatars': 'Expérience avec les graphismes 3D ou les avatars',
       'Age range': 'Tranche d’âge',
-      'Gender (optional)': 'Genre (facultatif)',
+      'Gender': 'Genre',
       'Country of origin (optional)': 'Pays d’origine (facultatif)',
       'Monocular Video Input': 'Vidéo monoculaire d’origine',
       'This is the original monocular video input used to reconstruct the 3D avatar. Please watch to understand the source material.': 'Voici la vidéo monoculaire originale utilisée pour reconstruire l’avatar 3D. Regardez-la pour comprendre le contenu source.',
@@ -553,6 +563,7 @@
       'Arts / Design': 'Arts ou design',
       'Humanities / Social Sciences': 'Sciences humaines ou sociales',
       'Other': 'Autre',
+      'These questions help describe the participant sample. Please answer the required background questions before continuing.': 'Ces questions aident à décrire l’échantillon de participants. Répondez aux questions obligatoires avant de continuer.',
       'Computer Graphics / Animation': 'Infographie ou animation',
       'Computer Vision / AI': 'Vision par ordinateur ou IA',
       'Engineering': 'Ingénierie',
@@ -605,6 +616,9 @@
       document.getElementById('studyPurpose').textContent = language === 'fr'
         ? 'Cette étude évalue la qualité d’un avatar 3D reconstruit à partir d’une vidéo de danse.'
         : 'This study evaluates the quality of a 3D avatar reconstructed from a dance video.';
+      document.getElementById('backgroundDescription').textContent = language === 'fr'
+        ? 'Ces questions aident à décrire l’échantillon de participants. Répondez aux questions obligatoires avant de continuer.'
+        : 'These questions help describe the participant sample. Please answer the required background questions before continuing.';
       document.getElementById('inputInstructions').textContent = language === 'fr'
         ? 'Voici la vidéo monoculaire originale utilisée pour reconstruire l’avatar 3D. Regardez-la pour comprendre le contenu source.'
         : 'This is the original monocular video input used to reconstruct the 3D avatar. Please watch to understand the source material.';
@@ -626,6 +640,10 @@
       if (!educationEl.value) missing.push('education');
       if (!roleEl.value) missing.push('role');
       if (!experienceEl.value) missing.push('experience');
+      if (fieldEl.value === 'Other' && !fieldOtherEl.value.trim()) missing.push('fieldOther');
+      if (!genderEl.value) missing.push('gender');
+      if (genderEl.value === 'Self-describe' && !genderOtherEl.value.trim()) missing.push('genderOther');
+      if (!countryRegionEl.value.trim()) missing.push('countryRegion');
 
       ratingElements.forEach((ratingElement) => {
         const rating = Number(ratingElement.value);
